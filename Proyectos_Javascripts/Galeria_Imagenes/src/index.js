@@ -1,1 +1,3 @@
-console.log("Hola DAVS Bienvenido");
+import './cargarCategorias.js';
+import './eventoCategorias.js';
+import './galeria/eventosGaleria.js';

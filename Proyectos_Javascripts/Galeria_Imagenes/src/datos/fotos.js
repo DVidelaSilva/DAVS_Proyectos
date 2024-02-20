@@ -1,6 +1,4 @@
-'use strict';
-
-var dataFotos = {
+export default {
 	fotos: {
 		america: [
 			{
@@ -430,81 +428,3 @@ var dataFotos = {
 		],
 	},
 };
-
-//const fotos = data.fotos; //Forma1
-const { fotos } = dataFotos; //Forma2 - destructuracion
-
-var dataCategorias = {
-	categorias: [
-		{ id: 'america', nombre: 'America', numeroFotos: fotos['america'].length, imagenPortada: './img/america.jpg' },
-		{ id: 'europa', nombre: 'Europa', numeroFotos: fotos['europa'].length, imagenPortada: './img/europa.jpg' },
-		{ id: 'africa', nombre: 'África', numeroFotos: fotos['africa'].length, imagenPortada: './img/africa.jpg' },
-		{ id: 'asia', nombre: 'Asia', numeroFotos: fotos['asia'].length, imagenPortada: './img/asia.jpg' },
-		{ id: 'oceania', nombre: 'Oceania', numeroFotos: fotos['oceania'].length, imagenPortada: './img/oceania.jpg' },
-		{ id: 'antartida', nombre: 'Antártida', numeroFotos: fotos['antartida'].length, imagenPortada: './img/antartida.jpg'},
-	],
-};
-
-const {categorias} = dataCategorias;
-const contenedorCategorias$1 = document.getElementById('categorias');
-
-
-categorias.forEach((categoria) => {
-    const nuevaCategoria = document.createElement('a');
-    const plantilla = `<img class="categoria__img" src=${categoria.imagenPortada} alt="" />
-                        <div class="categoria__datos">
-                            <p class="categoria__nombre">${categoria.nombre}</p>
-                            <p class="categoria__numero-fotos">${categoria.numeroFotos} Fotos</p>
-                        </div>`;
-
-    nuevaCategoria.innerHTML = plantilla;
-    nuevaCategoria.classList.add('categoria');
-    nuevaCategoria.href = '#';
-    nuevaCategoria.dataset.categoria = categoria.id;
-
-    contenedorCategorias$1.append(nuevaCategoria);
-});
-
-const contenedorCategorias = document.getElementById('categorias');
-const galeria$2 = document.getElementById('galeria');
-
-contenedorCategorias.addEventListener('click', (e) => {
-    e.preventDefault(); // previene el comportamiento que tiene por defecto el navegador (enviar al inicio de la pagina)
-
-
-    if(e.target.closest('a')){
-        galeria$2.classList.add('galeria--active'); //galeria--active es el estilo css de la galeria
-        document.body.style.overflow = 'hidden';
-
-        const categoriaActiva = e.target.dataset.categoria;
-        const fotos = dataFotos.fotos[categoriaActiva];
-
-        fotos.forEach((foto) => {
-            const slide = `		<a href="#" class="galeria__carousel-slide">
-                                    <img class="galeria__carousel-image" src="${foto.ruta}" alt="foto ruta" />
-                                </a>`;
-        
-        galeria$2.querySelector('.galeria__carousel-slides').innerHTML += slide;
-        });
-
-        galeria$2.querySelector('.galeria__carousel-slide').classList.add('galeria__carousel-slide--active');
-       
-
-    }
-});
-
-const galeria$1 = document.getElementById('galeria');
-const cerrarGaleria = () => {
-    galeria$1.classList.remove('galeria--active');
-
-    document.body.style.overflow = '';
-};
-
-const galeria = document.getElementById('galeria');
-galeria.addEventListener('click', (e) => {
-    const boton = e.target.closest('button');
-
-    if(boton?.dataset?.accion === 'cerrar-galeria'){
-        cerrarGaleria();
-    }
-});
