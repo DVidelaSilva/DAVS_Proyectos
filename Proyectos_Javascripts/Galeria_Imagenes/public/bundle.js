@@ -1,6 +1,6 @@
 'use strict';
 
-var dataFotos = {
+var datos = {
 	fotos: {
 		america: [
 			{
@@ -432,7 +432,7 @@ var dataFotos = {
 };
 
 //const fotos = data.fotos; //Forma1
-const { fotos } = dataFotos; //Forma2 - destructuracion
+const { fotos } = datos; //Forma2 - destructuracion
 
 var dataCategorias = {
 	categorias: [
@@ -465,46 +465,227 @@ categorias.forEach((categoria) => {
     contenedorCategorias$1.append(nuevaCategoria);
 });
 
+const galeria$4 = document.getElementById('galeria');
+const cargarImagen = (id, nombre, ruta, descripcion) => {
+    galeria$4.querySelector('.galeria__imagen').src = ruta;
+    galeria$4.querySelector('.galeria__imagen').dataset.idImagen = id;
+    galeria$4.querySelector('.galeria__titulo').innerText = nombre;
+    galeria$4.querySelector('.galeria__descripcion-imagen-activa').innerText = descripcion;
+
+    const categoriaActual = galeria$4.dataset.categoria;
+    const fotos = datos.fotos[categoriaActual];
+
+    let indexImagenActual;
+    fotos.forEach((foto, index) => {
+        if(foto.id == id){
+            indexImagenActual = index;
+        }
+
+    });
+
+
+    // MARCAMOS LA IMAGEN DEL CAROUSEL COMO ACTIVA (BORDE BLANCO)
+    if(galeria$4.querySelectorAll('.galeria__carousel-slide').length > 0){   
+        
+        // ELIMINAMOS LA CLASE ACTIVE DE CUALQUIER SLIDE
+        galeria$4.querySelector('.galeria__carousel-slide--active').classList.remove('galeria__carousel-slide--active');
+        //-------
+
+        galeria$4.querySelectorAll('.galeria__carousel-slide')[indexImagenActual].classList.add('galeria__carousel-slide--active');
+    }
+    
+};
+
+
+const cargarAnteriorSiguiente = (direccion) => {
+
+    const categoriaActual = galeria$4.dataset.categoria;
+    const fotos = datos.fotos[categoriaActual];
+    const idImagenActual = parseInt(galeria$4.querySelector('.galeria__imagen').dataset.idImagen);
+
+    let indexImagenActual;
+    fotos.forEach((foto, index) => {
+
+        if(foto.id == idImagenActual){
+            indexImagenActual = index;
+        }
+    });
+    
+
+    if(direccion == 'siguiente'){
+        if(fotos[indexImagenActual + 1]){   // Para que no falle al llegar a la ultima imagen
+            const {id, nombre, ruta, descripcion} = fotos[indexImagenActual + 1];
+            cargarImagen(id, nombre, ruta, descripcion);
+        }
+    }else if(direccion == 'anterior'){
+        if(fotos[indexImagenActual - 1]){   // Para que no falle al llegar a la ultima imagen
+            const {id, nombre, ruta, descripcion} = fotos[indexImagenActual - 1];
+            cargarImagen(id, nombre, ruta, descripcion);
+        }
+    }
+
+};
+
 const contenedorCategorias = document.getElementById('categorias');
-const galeria$2 = document.getElementById('galeria');
+const galeria$3 = document.getElementById('galeria');
 
 contenedorCategorias.addEventListener('click', (e) => {
     e.preventDefault(); // previene el comportamiento que tiene por defecto el navegador (enviar al inicio de la pagina)
 
 
     if(e.target.closest('a')){
-        galeria$2.classList.add('galeria--active'); //galeria--active es el estilo css de la galeria
+        galeria$3.classList.add('galeria--active'); //galeria--active es el estilo css de la galeria
         document.body.style.overflow = 'hidden';
 
-        const categoriaActiva = e.target.dataset.categoria;
-        const fotos = dataFotos.fotos[categoriaActiva];
+        
+
+        const categoriaActiva = e.target.closest('a').dataset.categoria;
+        galeria$3.dataset.categoria = categoriaActiva;
+        const fotos = datos.fotos[categoriaActiva];
+        const carousel = galeria$3.querySelector('.galeria__carousel-slides');
+
+        const {id, nombre, ruta, descripcion} = fotos[0];
+        cargarImagen(id, nombre, ruta, descripcion);
+
+        carousel.innerHTML = '';
 
         fotos.forEach((foto) => {
             const slide = `		<a href="#" class="galeria__carousel-slide">
-                                    <img class="galeria__carousel-image" src="${foto.ruta}" alt="foto ruta" />
+                                    <img class="galeria__carousel-image" src="${foto.ruta}" data-id="${foto.id}" alt="foto ruta" />
                                 </a>`;
         
-        galeria$2.querySelector('.galeria__carousel-slides').innerHTML += slide;
+            galeria$3.querySelector('.galeria__carousel-slides').innerHTML += slide;
         });
 
-        galeria$2.querySelector('.galeria__carousel-slide').classList.add('galeria__carousel-slide--active');
+        galeria$3.querySelector('.galeria__carousel-slide').classList.add('galeria__carousel-slide--active');
        
 
     }
 });
 
-const galeria$1 = document.getElementById('galeria');
+const galeria$2 = document.getElementById('galeria');
 const cerrarGaleria = () => {
-    galeria$1.classList.remove('galeria--active');
+    galeria$2.classList.remove('galeria--active');
 
     document.body.style.overflow = '';
+};
+
+const slideClick = (e) => {
+    const id = parseInt(e.target.dataset.id);
+    const galeria = document.getElementById('galeria');
+    const categoriaActiva = galeria.dataset.categoria;
+
+
+    let ruta;
+    let nombre;
+    let descripcion;
+
+    datos.fotos[categoriaActiva].forEach((foto) => {
+        if(foto.id === id){
+            ruta = foto.ruta;
+            nombre = foto.nombre;
+            descripcion = foto.descripcion;
+        }
+
+    });
+
+
+    cargarImagen(id, nombre, ruta, descripcion);
+
+};
+
+const galeria$1 = document.getElementById('galeria');
+
+    const opciones = {
+        root: document.querySelector('.galeria__carousel'),
+        rootMargin: '0px',
+        threshold: 0.9,
+    };
+
+const carousel = (direccion) => {
+    const observer = new IntersectionObserver((entradas) => {  // permite trabajar con si las imagens son o no visibles en la pantalla del navegador
+        const slideVisibles = entradas.filter((entrada) => {
+            if(entrada.isIntersecting === true){
+                return entrada;
+            }
+        });
+
+        if(direccion === 'atras'){
+            const primerSlideVisible = slideVisibles[0];
+            const indexPrimerSlideVisible = entradas.indexOf(primerSlideVisible);
+
+            if(indexPrimerSlideVisible >= 1){
+                entradas[indexPrimerSlideVisible - 1].target.scrollIntoView({
+                    behavior: 'smooth',
+                    inline: 'start',
+                });
+            }
+
+        }else if(direccion === 'adelante'){
+            const ultimoSlideVisible = slideVisibles[slideVisibles.length - 1];
+            const indexUltimoSlideVisible = entradas.indexOf(ultimoSlideVisible);
+            
+            if(entradas.length - 1 > indexUltimoSlideVisible){               
+                entradas[indexUltimoSlideVisible + 1].target.scrollIntoView({
+                    behavior: 'smooth',
+                    inline: 'start',
+                });
+            }
+        }
+
+
+        const slides = galeria$1.querySelectorAll('.galeria__carousel-slide');
+        slides.forEach((slide) => {
+            observer.unobserve(slide);
+        });
+    }, opciones);
+
+    const slides = galeria$1.querySelectorAll('.galeria__carousel-slide');
+    slides.forEach((slide) => {
+        observer.observe(slide);
+    });
+
 };
 
 const galeria = document.getElementById('galeria');
 galeria.addEventListener('click', (e) => {
     const boton = e.target.closest('button');
 
+    // CERRAR GALERIA
     if(boton?.dataset?.accion === 'cerrar-galeria'){
         cerrarGaleria();
     }
+
+    // CAROUSEL SLIDE CLICK
+    if(e.target.dataset.id){
+        slideClick(e);
+    }
+
+
+    // SIGUIENTE IMAGEN
+
+    if(boton?.dataset?.accion === 'siguiente-imagen'){
+        cargarAnteriorSiguiente('siguiente');
+    }
+
+    // ANTERIOR IMAGEN
+
+    if(boton?.dataset?.accion === 'anterior-imagen'){
+        cargarAnteriorSiguiente('anterior');
+    }
+
+
+    // CAROUSEL ADELANTE
+
+    if(boton?.dataset?.accion === 'siguiente-slide'){
+        carousel('adelante');
+    }
+
+    // CAROUSEL ATRAS
+
+    if(boton?.dataset?.accion === 'anterior-slide'){
+        carousel('atras');
+    }
+
+        
 });
