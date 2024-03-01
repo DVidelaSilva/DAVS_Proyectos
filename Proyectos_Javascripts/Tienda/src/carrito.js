@@ -1,27 +1,54 @@
+import data from './data/productos';
+
 const botonesAbrirCarrito = document.querySelectorAll('[data-accion="abrir-carrito"]');
 const botonesCerrarCarrito = document.querySelectorAll('[data-accion="cerrar-carrito"]');
 const ventanaCarrito = document.getElementById('carrito');
 const btnAgregarCarrito = document.getElementById('agregar-al-carrito');
 const producto = document.getElementById('producto');
-const carrito = [];
+let carrito = [];
+
+const formatearMoneda = new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'});
 
 
 
 const renderCarrito = () => {
     ventanaCarrito.classList.add('carrito--active');
 
+
+    // Eliminamos todos los productos anteriores para construir el carrito desde cero.
+    const productosAnteriores = ventanaCarrito.querySelectorAll('.carrito__producto');
+    productosAnteriores.forEach(producto => producto.remove());
+
     carrito.forEach((productoCarrito) => {
 
+        //Obtenemos el precio del archivo de producto.js
+        // cuando el id del item del carrito sea el mismo que alguno de la lista.
+        data.productos.forEach((productoBaseDatos) => {
+            if(productoBaseDatos.id === productoCarrito.id){
+                productoCarrito.precio = productoBaseDatos.precio;
+            }
+        })
+
+
+
+        // Establecemos la ruta de la imagen que vamos a querer mostrar
+        let thumbSrc = producto.querySelectorAll('.producto__thumb-img')[0].src;
+        if(productoCarrito.color === 'rojo'){
+            thumbSrc = './img/thumbs/rojo.jpg'
+        }else if(productoCarrito.color === 'amarillo'){
+            thumbSrc = './img/thumbs/amarillo.jpg'
+        }
+       
         // Creamos una plantilla del codigo HTML
         const plantillaProducto = `							
         <div class="carrito__producto-info">
-            <img src="./img/tennis/1.jpg" alt="" class="carrito__thumb" />
+            <img src=${thumbSrc} alt="" class="carrito__thumb" />
             <div>
                 <p class="carrito__producto-nombre">
-                    <span class="carrito__producto-cantidad">1 x </span>Lorem Ipsum Dolot Asimmet
+                    <span class="carrito__producto-cantidad">${productoCarrito.cantidad} x </span>${productoCarrito.nombre}
                 </p>
                 <p class="carrito__producto-propiedades">
-                    Tamaño:<span>2,5</span> Color:<span>Rojo</span>
+                    Tamaño:<span>${productoCarrito.tamaño}</span> Color:<span>${productoCarrito.color}</span>
                 </p>
             </div>
         </div>
@@ -39,7 +66,7 @@ const renderCarrito = () => {
                     />
                 </svg>
             </button>
-            <p class="carrito__producto-precio">$500.00</p>
+            <p class="carrito__producto-precio">${formatearMoneda.format(productoCarrito.precio * productoCarrito.cantidad)}</p>
         </div>
         `;
 
@@ -84,11 +111,54 @@ btnAgregarCarrito.addEventListener('click', (e) => {
 
     //console.log(id, nombre, cantidad, color, tamaño)
 
-    carrito.push({
-        id: id,
-        nombre: nombre,
-        cantidad: cantidad,
-        color: color,
-        tamaño: tamaño
-    })
+    if(carrito.length > 0){
+        let productoEnCarrito = false;
+
+        carrito.forEach(item => {
+            if(item.id === id && item.nombre === nombre && item.color === color && item.tamaño === tamaño){
+                item.cantidad += cantidad;
+                productoEnCarrito = true;
+            }
+        });
+
+        if(!productoEnCarrito){
+            carrito.push({
+                id: id,
+                nombre: nombre,
+                cantidad: cantidad,
+                color: color,
+                tamaño: tamaño
+            });
+        }
+    }else{
+        carrito.push({
+            id: id,
+            nombre: nombre,
+            cantidad: cantidad,
+            color: color,
+            tamaño: tamaño
+        });
+    }
+
+
+});
+
+
+
+// Botones eliminar productos del carrito
+
+ventanaCarrito.addEventListener('click', (e) => {
+    
+    if(e.target.closest('button')?.dataset.accion === 'eliminar-item-carrito'){
+        const producto = e.target.closest('.carrito__producto');
+        const indexProducto = [...ventanaCarrito.querySelectorAll('.carrito__producto')].indexOf(producto);
+        
+        carrito = carrito.filter((item, index) => {
+            if(index != indexProducto){
+                return item;
+            }
+        });
+
+        renderCarrito();
+    }
 });
