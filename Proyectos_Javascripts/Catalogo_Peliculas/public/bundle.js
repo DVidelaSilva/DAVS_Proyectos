@@ -71,7 +71,7 @@ const cargarGeneros = async() => {
         btn.setAttribute('data-id', genero.id);
 
         contenedorGeneros.appendChild(btn);
-        
+       
     });
 };
 
